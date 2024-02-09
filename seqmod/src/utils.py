@@ -1,9 +1,10 @@
 """utils.py package that contains random functionality used throughout the sequence package."""
 
-import matplotlib
 import random
 
 import numpy as np
+
+import matplotlib
 
 import torch
 
@@ -22,11 +23,6 @@ def set_seed(seed: int = 42) -> bool:
     -------
     bool
         Always returns True, indicating the random seeds and configurations were successfully set.
-
-    Examples
-    --------
-    >>> set_seed(123)
-    True
     """
     random.seed(seed)
     np.random.seed(seed)
@@ -64,6 +60,3 @@ def add_metric_plot(axes: matplotlib.axes._axes.Axes, X, y, legend: str, colour:
     None
     """
     axes.plot(X, y, label=legend, color=colour)
-
-
-

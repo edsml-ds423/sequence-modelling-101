@@ -79,18 +79,16 @@ def get_storm_raw_data(
         # build the storm filepath
         storm_path = os.path.join(root_dir, storm, "*.json")
         for fp in sorted(glob.glob(storm_path)):
-            
+
             data = read_json(file_path=fp)
-            
+
             # extract filename information
             storm_name, img_num, file_suffix = fp.split("/")[-1].split("_")
             file_data = {
                 "storm_name": storm_name,
                 "image_number": img_num,
                 "file_suffix": file_suffix,
-                "file_path": os.path.join(
-                    root_dir, storm, f"{storm}_{img_num}.jpg"
-                ),
+                "file_path": os.path.join(root_dir, storm, f"{storm}_{img_num}.jpg"),
             }
 
             # append file data to data
@@ -174,39 +172,39 @@ def read_json(file_path):
     """
     with open(file_path, "r") as file:
         return json.load(file)
-    
+
 
 def create_time_interval_dt_column(df, time_column, dt):
     """"""
-    df["dt"] = round(df[time_column].apply(pd.to_numeric) / dt).apply(int)     
-    
+    df["dt"] = round(df[time_column].apply(pd.to_numeric) / dt).apply(int)
+
     return df
-    
+
 
 def get_wind_speed_data(data_dir, storm_names, numeric_cols, time_column, dt):
-        """"""
-        df_storm_features, df_storm_labels = get_storm_raw_data(root_dir=data_dir,
-                                                                storm_names=storm_names)
-        df = merge_df2_onto_df1(
-            df1=df_storm_features,
-            df2=df_storm_labels,
-            how="left",
-            columns_to_match=["storm_name",
-                              "image_number"],
-        )
+    """"""
+    df_storm_features, df_storm_labels = get_storm_raw_data(
+        root_dir=data_dir, storm_names=storm_names
+    )
+    df = merge_df2_onto_df1(
+        df1=df_storm_features,
+        df2=df_storm_labels,
+        how="left",
+        columns_to_match=["storm_name", "image_number"],
+    )
 
-        # create a id column (storm name + image number)
-        df["id"] = df["storm_id"] + "_" + df["image_number"]
-        df = df[["storm_id", "id", "relative_time", "ocean", "wind_speed"]]
+    # create a id column (storm name + image number)
+    df["id"] = df["storm_id"] + "_" + df["image_number"]
+    df = df[["storm_id", "id", "relative_time", "ocean", "wind_speed"]]
 
-        if numeric_cols is not None:
-            for numeric_col in numeric_cols:
-                df[numeric_col] = pd.to_numeric(df[numeric_col])
+    if numeric_cols is not None:
+        for numeric_col in numeric_cols:
+            df[numeric_col] = pd.to_numeric(df[numeric_col])
 
-        if dt is not None:
-            df = create_time_interval_dt_column(df=df, time_column=time_column, dt=dt)
+    if dt is not None:
+        df = create_time_interval_dt_column(df=df, time_column=time_column, dt=dt)
 
-        return df
+    return df
 
 
 def create_sequence_data(df, storm_names, input_length, target_length):
@@ -216,19 +214,23 @@ def create_sequence_data(df, storm_names, input_length, target_length):
         _speed = df[df.storm_id == _storm]["wind_speed"].values
         _time = df[df.storm_id == _storm]["dt"].values
         _ocean = df[df.storm_id == _storm]["ocean"].unique()[0]
-        for i in range(0, (len(_speed)-(input_length + target_length)) + 1):
-            _row = np.concatenate([[_storm, _ocean],
-                                   _time[i: i+input_length+target_length],
-                                   _speed[i: i+input_length+target_length], 
-                                   ])
+        for i in range(0, (len(_speed) - (input_length + target_length)) + 1):
+            _row = np.concatenate(
+                [
+                    [_storm, _ocean],
+                    _time[i : i + input_length + target_length],
+                    _speed[i : i + input_length + target_length],
+                ]
+            )
             sequences.append(_row)
-    columns = ["storm", "ocean"] + \
-        [f"t_input_{i}" for i in range(input_length)] + \
-            [f"t_target_{i}" for i in range(target_length)] + \
-                [f"v_input_{i}" for i in range(input_length)] + \
-                    [f"v_target_{i}" for i in range(target_length)]
-    
-    df_sequence = pd.DataFrame(data=sequences,
-                               columns=columns)
-    
+    columns = (
+        ["storm", "ocean"]
+        + [f"t_input_{i}" for i in range(input_length)]
+        + [f"t_target_{i}" for i in range(target_length)]
+        + [f"v_input_{i}" for i in range(input_length)]
+        + [f"v_target_{i}" for i in range(target_length)]
+    )
+
+    df_sequence = pd.DataFrame(data=sequences, columns=columns)
+
     return df_sequence
