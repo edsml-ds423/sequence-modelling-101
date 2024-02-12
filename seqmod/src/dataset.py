@@ -290,6 +290,7 @@ class StormImageSequencedDataset(Dataset):
 
     def __getitem__(self, idx):
         """"""
+        # TODO: make sure this can handle >1 sequence length
         img_tensors = [
             io.read_image(img_path) for img_path in self.data.iloc[idx].copy()
         ]
