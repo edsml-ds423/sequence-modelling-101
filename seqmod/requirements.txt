@@ -11,3 +11,4 @@ seaborn
 pytest
 progressbar
 tqdm
+pytorch_msssim
